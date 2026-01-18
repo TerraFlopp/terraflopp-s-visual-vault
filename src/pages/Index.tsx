@@ -1,12 +1,17 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Hero from "@/components/Hero";
+import VideoGrid from "@/components/VideoGrid";
+import { useVideos } from "@/hooks/useVideos";
 
 const Index = () => {
+  const { data: videos = [], isLoading } = useVideos();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Hero />
+      
+      <main className="max-w-7xl mx-auto px-4 pb-20">
+        <VideoGrid videos={videos} isLoading={isLoading} />
+      </main>
     </div>
   );
 };
