@@ -16,7 +16,6 @@ const authSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -67,44 +66,22 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast.error("Email ou mot de passe incorrect");
-          } else {
-            toast.error(error.message);
-          }
-          return;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email ou mot de passe incorrect");
+        } else {
+          toast.error(error.message);
         }
-
-        toast.success("Connexion réussie !");
-        navigate("/admin");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
-          },
-        });
-
-        if (error) {
-          if (error.message.includes("User already registered")) {
-            toast.error("Cet email est déjà utilisé");
-          } else {
-            toast.error(error.message);
-          }
-          return;
-        }
-
-        toast.success("Compte créé ! Connexion en cours...");
-        navigate("/admin");
+        return;
       }
+
+      toast.success("Connexion réussie !");
+      navigate("/admin");
     } catch (error) {
       toast.error("Une erreur est survenue");
     } finally {
@@ -122,12 +99,10 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              {isLogin ? "Connexion Admin" : "Créer un compte"}
+              Connexion Admin
             </h1>
             <p className="text-muted-foreground text-sm">
-              {isLogin
-                ? "Accède à ton dashboard pour gérer tes vidéos"
-                : "Crée ton compte administrateur"}
+              Accède à ton dashboard pour gérer tes vidéos
             </p>
           </div>
 
@@ -183,25 +158,11 @@ const Auth = () => {
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isLogin ? (
-                "Se connecter"
               ) : (
-                "Créer le compte"
+                "Se connecter"
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin
-                ? "Pas encore de compte ? S'inscrire"
-                : "Déjà un compte ? Se connecter"}
-            </button>
-          </div>
         </div>
 
         <div className="mt-6 text-center">
