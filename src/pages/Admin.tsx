@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVideos, Video } from "@/hooks/useVideos";
+import { useTrustedClients, TrustedClient } from "@/hooks/useTrustedClients";
 import {
   LogOut,
   Upload,
@@ -16,6 +17,9 @@ import {
   GripVertical,
   Loader2,
   Plus,
+  Users,
+  Video as VideoIcon,
+  Edit2,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,14 +34,26 @@ const Admin = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: videos = [], isLoading: isLoadingVideos } = useVideos();
+  const { data: trustedClients = [], isLoading: isLoadingClients } = useTrustedClients();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState<"videos" | "clients">("videos");
+  
+  // Video states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [addingYoutube, setAddingYoutube] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [draggedVideo, setDraggedVideo] = useState<Video | null>(null);
+  
+  // Client states
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [addingClient, setAddingClient] = useState(false);
+  const [clientName, setClientName] = useState("");
+  const [clientLogoUrl, setClientLogoUrl] = useState("");
+  const [clientWebsiteUrl, setClientWebsiteUrl] = useState("");
+  const [editingClient, setEditingClient] = useState<TrustedClient | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -221,6 +237,86 @@ const Admin = () => {
     setDraggedVideo(null);
   };
 
+  // Client functions
+  const handleAddOrUpdateClient = async () => {
+    if (!clientName.trim()) {
+      toast.error("Le nom est requis");
+      return;
+    }
+
+    setAddingClient(true);
+
+    try {
+      if (editingClient) {
+        const { error } = await supabase
+          .from("trusted_clients")
+          .update({
+            name: clientName,
+            logo_url: clientLogoUrl || null,
+            website_url: clientWebsiteUrl || null,
+          })
+          .eq("id", editingClient.id);
+
+        if (error) throw error;
+        toast.success("Client mis à jour !");
+      } else {
+        const maxOrder = trustedClients.length > 0
+          ? Math.max(...trustedClients.map((c) => c.display_order))
+          : 0;
+
+        const { error } = await supabase.from("trusted_clients").insert({
+          name: clientName,
+          logo_url: clientLogoUrl || null,
+          website_url: clientWebsiteUrl || null,
+          display_order: maxOrder + 1,
+        });
+
+        if (error) throw error;
+        toast.success("Client ajouté !");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["trusted_clients"] });
+      setIsAddClientDialogOpen(false);
+      resetClientForm();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    } finally {
+      setAddingClient(false);
+    }
+  };
+
+  const handleDeleteClient = async (client: TrustedClient) => {
+    if (!confirm(`Supprimer "${client.name}" ?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("trusted_clients")
+        .delete()
+        .eq("id", client.id);
+
+      if (error) throw error;
+      toast.success("Client supprimé");
+      queryClient.invalidateQueries({ queryKey: ["trusted_clients"] });
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const openEditClient = (client: TrustedClient) => {
+    setEditingClient(client);
+    setClientName(client.name);
+    setClientLogoUrl(client.logo_url || "");
+    setClientWebsiteUrl(client.website_url || "");
+    setIsAddClientDialogOpen(true);
+  };
+
+  const resetClientForm = () => {
+    setClientName("");
+    setClientLogoUrl("");
+    setClientWebsiteUrl("");
+    setEditingClient(null);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -250,217 +346,413 @@ const Admin = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Actions */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Mes Vidéos</h2>
-            <p className="text-muted-foreground">
-              {videos.length} vidéo{videos.length > 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter une vidéo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader>
-                <DialogTitle>Ajouter une vidéo</DialogTitle>
-              </DialogHeader>
-              <Tabs defaultValue="upload" className="mt-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upload">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload
-                  </TabsTrigger>
-                  <TabsTrigger value="youtube">
-                    <Youtube className="w-4 h-4 mr-2" />
-                    YouTube
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="upload" className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="title">Titre (optionnel)</Label>
-                    <Input
-                      id="title"
-                      value={videoTitle}
-                      onChange={(e) => setVideoTitle(e.target.value)}
-                      placeholder="Nom de la vidéo"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Fichier vidéo</Label>
-                    <div className="mt-1 border-2 border-dashed border-border rounded-xl p-8 text-center">
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="video-upload"
-                        disabled={uploadingVideo}
-                      />
-                      <label
-                        htmlFor="video-upload"
-                        className="cursor-pointer flex flex-col items-center gap-2"
-                      >
-                        {uploadingVideo ? (
-                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        ) : (
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {uploadingVideo
-                            ? "Upload en cours..."
-                            : "Cliquez ou glissez un fichier vidéo"}
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="youtube" className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="youtube-title">Titre (optionnel)</Label>
-                    <Input
-                      id="youtube-title"
-                      value={videoTitle}
-                      onChange={(e) => setVideoTitle(e.target.value)}
-                      placeholder="Nom de la vidéo"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="youtube-url">URL YouTube</Label>
-                    <Input
-                      id="youtube-url"
-                      value={youtubeUrl}
-                      onChange={(e) => setYoutubeUrl(e.target.value)}
-                      placeholder="https://youtube.com/shorts/..."
-                      className="mt-1"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleAddYoutube}
-                    className="w-full"
-                    disabled={addingYoutube}
-                  >
-                    {addingYoutube ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Ajouter"
-                    )}
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+        {/* Section Tabs */}
+        <div className="flex gap-4 mb-8">
+          <Button
+            variant={activeSection === "videos" ? "default" : "outline"}
+            onClick={() => setActiveSection("videos")}
+            className="flex items-center gap-2"
+          >
+            <VideoIcon className="w-4 h-4" />
+            Vidéos ({videos.length})
+          </Button>
+          <Button
+            variant={activeSection === "clients" ? "default" : "outline"}
+            onClick={() => setActiveSection("clients")}
+            className="flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Clients ({trustedClients.length})
+          </Button>
         </div>
 
-        {/* Video Grid */}
-        {isLoadingVideos ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-[9/16] rounded-xl bg-muted animate-pulse"
-              />
-            ))}
-          </div>
-        ) : videos.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-              <Upload className="w-8 h-8 text-muted-foreground" />
+        {/* Videos Section */}
+        {activeSection === "videos" && (
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Mes Vidéos</h2>
+                <p className="text-muted-foreground">
+                  {videos.length} vidéo{videos.length > 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-primary hover:bg-primary/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter une vidéo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border">
+                  <DialogHeader>
+                    <DialogTitle>Ajouter une vidéo</DialogTitle>
+                  </DialogHeader>
+                  <Tabs defaultValue="upload" className="mt-4">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="upload">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload
+                      </TabsTrigger>
+                      <TabsTrigger value="youtube">
+                        <Youtube className="w-4 h-4 mr-2" />
+                        YouTube
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="upload" className="space-y-4 mt-4">
+                      <div>
+                        <Label htmlFor="title">Titre (optionnel)</Label>
+                        <Input
+                          id="title"
+                          value={videoTitle}
+                          onChange={(e) => setVideoTitle(e.target.value)}
+                          placeholder="Nom de la vidéo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Fichier vidéo</Label>
+                        <div className="mt-1 border-2 border-dashed border-border rounded-xl p-8 text-center">
+                          <input
+                            type="file"
+                            accept="video/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="video-upload"
+                            disabled={uploadingVideo}
+                          />
+                          <label
+                            htmlFor="video-upload"
+                            className="cursor-pointer flex flex-col items-center gap-2"
+                          >
+                            {uploadingVideo ? (
+                              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            ) : (
+                              <Upload className="w-8 h-8 text-muted-foreground" />
+                            )}
+                            <span className="text-sm text-muted-foreground">
+                              {uploadingVideo
+                                ? "Upload en cours..."
+                                : "Cliquez ou glissez un fichier vidéo"}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="youtube" className="space-y-4 mt-4">
+                      <div>
+                        <Label htmlFor="youtube-title">Titre (optionnel)</Label>
+                        <Input
+                          id="youtube-title"
+                          value={videoTitle}
+                          onChange={(e) => setVideoTitle(e.target.value)}
+                          placeholder="Nom de la vidéo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="youtube-url">URL YouTube</Label>
+                        <Input
+                          id="youtube-url"
+                          value={youtubeUrl}
+                          onChange={(e) => setYoutubeUrl(e.target.value)}
+                          placeholder="https://youtube.com/shorts/..."
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleAddYoutube}
+                        className="w-full"
+                        disabled={addingYoutube}
+                      >
+                        {addingYoutube ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Ajouter"
+                        )}
+                      </Button>
+                    </TabsContent>
+                  </Tabs>
+                </DialogContent>
+              </Dialog>
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Aucune vidéo
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Commence par ajouter ta première vidéo
-            </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Ajouter une vidéo
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {[...videos]
-              .sort((a, b) => a.display_order - b.display_order)
-              .map((video) => (
-                <motion.div
-                  key={video.id}
-                  draggable
-                  onDragStart={() => handleDragStart(video)}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(video)}
-                  className={`relative aspect-[9/16] rounded-xl overflow-hidden bg-muted group cursor-move ${
-                    draggedVideo?.id === video.id ? "opacity-50" : ""
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  {/* Thumbnail */}
-                  {video.video_type === "youtube" && video.youtube_url ? (
-                    <img
-                      src={`https://img.youtube.com/vi/${
-                        video.youtube_url.match(
-                          /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-                        )?.[1]
-                      }/maxresdefault.jpg`}
-                      alt={video.title || "Video"}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : video.thumbnail_url ? (
-                    <img
-                      src={video.thumbnail_url}
-                      alt={video.title || "Video"}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <video
-                      src={video.video_url || undefined}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  )}
 
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                  {/* Actions */}
-                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="w-8 h-8"
-                      onClick={() => handleDeleteVideo(video)}
+            {/* Video Grid */}
+            {isLoadingVideos ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[9/16] rounded-xl bg-muted animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : videos.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Upload className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Aucune vidéo
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Commence par ajouter ta première vidéo
+                </p>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter une vidéo
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {[...videos]
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((video) => (
+                    <motion.div
+                      key={video.id}
+                      draggable
+                      onDragStart={() => handleDragStart(video)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(video)}
+                      className={`relative aspect-[9/16] rounded-xl overflow-hidden bg-muted group cursor-move ${
+                        draggedVideo?.id === video.id ? "opacity-50" : ""
+                      }`}
+                      whileHover={{ scale: 1.02 }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {/* Thumbnail */}
+                      {video.video_type === "youtube" && video.youtube_url ? (
+                        <img
+                          src={`https://img.youtube.com/vi/${
+                            video.youtube_url.match(
+                              /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+                            )?.[1]
+                          }/maxresdefault.jpg`}
+                          alt={video.title || "Video"}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : video.thumbnail_url ? (
+                        <img
+                          src={video.thumbnail_url}
+                          alt={video.title || "Video"}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={video.video_url || undefined}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      )}
+
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      {/* Actions */}
+                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="w-8 h-8"
+                          onClick={() => handleDeleteVideo(video)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {/* Drag handle */}
+                      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-8 h-8 rounded-lg bg-background/80 backdrop-blur flex items-center justify-center">
+                          <GripVertical className="w-4 h-4 text-foreground" />
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {video.title || "Sans titre"}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {video.video_type === "youtube" ? "YouTube" : "Upload"}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Clients Section */}
+        {activeSection === "clients" && (
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Ils m'ont fait confiance</h2>
+                <p className="text-muted-foreground">
+                  {trustedClients.length} client{trustedClients.length > 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <Dialog 
+                open={isAddClientDialogOpen} 
+                onOpenChange={(open) => {
+                  setIsAddClientDialogOpen(open);
+                  if (!open) resetClientForm();
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button className="bg-primary hover:bg-primary/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter un client
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingClient ? "Modifier le client" : "Ajouter un client"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <Label htmlFor="client-name">Nom *</Label>
+                      <Input
+                        id="client-name"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        placeholder="Nom du créateur/marque"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client-logo">URL du logo (optionnel)</Label>
+                      <Input
+                        id="client-logo"
+                        value={clientLogoUrl}
+                        onChange={(e) => setClientLogoUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client-website">Site web (optionnel)</Label>
+                      <Input
+                        id="client-website"
+                        value={clientWebsiteUrl}
+                        onChange={(e) => setClientWebsiteUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="mt-1"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleAddOrUpdateClient}
+                      className="w-full"
+                      disabled={addingClient}
+                    >
+                      {addingClient ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : editingClient ? (
+                        "Mettre à jour"
+                      ) : (
+                        "Ajouter"
+                      )}
                     </Button>
                   </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
-                  {/* Drag handle */}
-                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-8 h-8 rounded-lg bg-background/80 backdrop-blur flex items-center justify-center">
-                      <GripVertical className="w-4 h-4 text-foreground" />
-                    </div>
-                  </div>
+            {/* Clients Grid */}
+            {isLoadingClients ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-24 rounded-xl bg-muted animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : trustedClients.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Aucun client
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Ajoute les créateurs qui t'ont fait confiance
+                </p>
+                <Button onClick={() => setIsAddClientDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un client
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...trustedClients]
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((client) => (
+                    <motion.div
+                      key={client.id}
+                      className="relative p-4 rounded-xl bg-card border border-border group hover:border-primary/50 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <div className="flex items-center gap-4">
+                        {client.logo_url ? (
+                          <img
+                            src={client.logo_url}
+                            alt={client.name}
+                            className="w-12 h-12 rounded-lg object-contain bg-muted p-1"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <span className="text-lg font-bold text-primary">
+                              {client.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground truncate">
+                            {client.name}
+                          </p>
+                          {client.website_url && (
+                            <a
+                              href={client.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline truncate block"
+                            >
+                              {client.website_url}
+                            </a>
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Title */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {video.title || "Sans titre"}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {video.video_type === "youtube" ? "YouTube" : "Upload"}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-          </div>
+                      {/* Actions */}
+                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8"
+                          onClick={() => openEditClient(client)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="w-8 h-8"
+                          onClick={() => handleDeleteClient(client)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

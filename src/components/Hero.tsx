@@ -56,20 +56,29 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4"
           >
-            <span className="text-foreground">Salut, moi c'est </span>
-            <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-500 via-primary to-purple-400 bg-clip-text text-transparent">
               Terraflopp
             </span>
-            <span className="text-foreground"> !</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-xl md:text-2xl lg:text-3xl font-medium text-foreground mb-8 flex items-center justify-center gap-2"
+          >
+            <span>⭐</span>
+            <span>L'étoile montante du montage</span>
+            <span>⭐</span>
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10"
           >
             Monteur vidéo & CM pour le collectif MS et d'autres gros créateurs.
             J'ai déjà quelques millions de vues au compteur, et mon job c'est de

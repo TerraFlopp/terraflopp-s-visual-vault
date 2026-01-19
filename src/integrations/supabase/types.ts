@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      trusted_clients: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
