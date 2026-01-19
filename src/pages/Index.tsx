@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import VideoGrid from "@/components/VideoGrid";
+import TrustedClients from "@/components/TrustedClients";
 import { useVideos } from "@/hooks/useVideos";
 
 const Index = () => {
@@ -8,6 +9,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Hero />
+      
+      <TrustedClients />
       
       <main className="max-w-7xl mx-auto px-4 pb-20">
         <VideoGrid videos={videos} isLoading={isLoading} />
