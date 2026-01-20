@@ -59,15 +59,17 @@ const VideoGrid = ({ videos, isLoading }: VideoGridProps) => {
   return (
     <>
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"
         initial="hidden"
-        animate="visible"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
         variants={{
           hidden: { opacity: 0 },
           visible: {
             opacity: 1,
             transition: {
-              staggerChildren: 0.1,
+              staggerChildren: 0.08,
+              delayChildren: 0.1,
             },
           },
         }}
@@ -78,9 +80,25 @@ const VideoGrid = ({ videos, isLoading }: VideoGridProps) => {
             <motion.div
               key={video.id}
               variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 },
+                hidden: { 
+                  opacity: 0, 
+                  y: 60,
+                  x: -20,
+                  scale: 0.95,
+                },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  x: 0,
+                  scale: 1,
+                  transition: {
+                    type: "tween",
+                    ease: [0.25, 0.1, 0.25, 1],
+                    duration: 0.5,
+                  },
+                },
               }}
+              className="max-w-[280px] mx-auto w-full"
             >
               <VideoCard
                 id={video.id}

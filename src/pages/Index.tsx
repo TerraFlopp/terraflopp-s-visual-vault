@@ -34,7 +34,7 @@ const Index = () => {
         
         <TrustedClients />
         
-        <main className="max-w-7xl mx-auto px-4 pb-20">
+        <main className="max-w-6xl mx-auto px-4 pb-20 mt-16">
           <VideoGrid videos={videos} isLoading={isLoading} />
         </main>
       </div>
