@@ -6,6 +6,7 @@ export interface TrustedClient {
   name: string;
   logo_url: string | null;
   website_url: string | null;
+  subscriber_count: string | null;
   display_order: number;
   created_at: string;
   updated_at: string;

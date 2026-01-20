@@ -21,6 +21,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          subscriber_count: string | null
           updated_at: string
           website_url: string | null
         }
@@ -30,6 +31,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          subscriber_count?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -39,6 +41,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          subscriber_count?: string | null
           updated_at?: string
           website_url?: string | null
         }
