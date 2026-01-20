@@ -30,7 +30,7 @@ const Hero = () => {
           className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary/10 blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.5, 0.7, 0.5],
           }}
           transition={{
             duration: 8,
@@ -42,7 +42,7 @@ const Hero = () => {
           className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-accent/10 blur-3xl"
           animate={{
             scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.4, 0.6, 0.4],
           }}
           transition={{
             duration: 10,
@@ -59,7 +59,7 @@ const Hero = () => {
             className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4"
           >
             <span className="bg-gradient-to-r from-purple-500 via-primary to-purple-400 bg-clip-text text-transparent">
-              Terraflopp
+              TerraFlopp
             </span>
           </motion.h1>
 
@@ -71,7 +71,6 @@ const Hero = () => {
           >
             <span>⭐</span>
             <span>L'étoile montante du montage</span>
-            <span>⭐</span>
           </motion.p>
 
           <motion.p
