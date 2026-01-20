@@ -47,6 +47,7 @@ const Admin = () => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [videoViewsCount, setVideoViewsCount] = useState("");
   const [draggedVideo, setDraggedVideo] = useState<Video | null>(null);
   
   // Client states
@@ -119,6 +120,7 @@ const Admin = () => {
         title: videoTitle || file.name.replace(/\.[^/.]+$/, ""),
         video_type: "upload",
         video_url: publicUrl,
+        views_count: videoViewsCount || null,
         display_order: maxOrder + 1,
       });
 
@@ -128,6 +130,7 @@ const Admin = () => {
       queryClient.invalidateQueries({ queryKey: ["videos"] });
       setIsAddDialogOpen(false);
       setVideoTitle("");
+      setVideoViewsCount("");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'upload");
     } finally {
@@ -158,6 +161,7 @@ const Admin = () => {
         title: videoTitle || "Vidéo YouTube",
         video_type: "youtube",
         youtube_url: youtubeUrl,
+        views_count: videoViewsCount || null,
         display_order: maxOrder + 1,
       });
 
@@ -168,6 +172,7 @@ const Admin = () => {
       setIsAddDialogOpen(false);
       setYoutubeUrl("");
       setVideoTitle("");
+      setVideoViewsCount("");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout");
     } finally {
@@ -198,6 +203,7 @@ const Admin = () => {
         title: videoTitle || "Vidéo TikTok",
         video_type: "tiktok",
         tiktok_url: tiktokUrl,
+        views_count: videoViewsCount || null,
         display_order: maxOrder + 1,
       });
 
@@ -208,6 +214,7 @@ const Admin = () => {
       setIsAddDialogOpen(false);
       setTiktokUrl("");
       setVideoTitle("");
+      setVideoViewsCount("");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout");
     } finally {
@@ -463,6 +470,16 @@ const Admin = () => {
                         />
                       </div>
                       <div>
+                        <Label htmlFor="views">Nombre de vues (optionnel)</Label>
+                        <Input
+                          id="views"
+                          value={videoViewsCount}
+                          onChange={(e) => setVideoViewsCount(e.target.value)}
+                          placeholder="ex: 1.2M, 500K..."
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
                         <Label>Fichier vidéo</Label>
                         <div className="mt-1 border-2 border-dashed border-border rounded-xl p-8 text-center">
                           <input
@@ -504,6 +521,16 @@ const Admin = () => {
                         />
                       </div>
                       <div>
+                        <Label htmlFor="youtube-views">Nombre de vues (optionnel)</Label>
+                        <Input
+                          id="youtube-views"
+                          value={videoViewsCount}
+                          onChange={(e) => setVideoViewsCount(e.target.value)}
+                          placeholder="ex: 1.2M, 500K..."
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
                         <Label htmlFor="youtube-url">URL YouTube</Label>
                         <Input
                           id="youtube-url"
@@ -534,6 +561,16 @@ const Admin = () => {
                           value={videoTitle}
                           onChange={(e) => setVideoTitle(e.target.value)}
                           placeholder="Nom de la vidéo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="tiktok-views">Nombre de vues (optionnel)</Label>
+                        <Input
+                          id="tiktok-views"
+                          value={videoViewsCount}
+                          onChange={(e) => setVideoViewsCount(e.target.value)}
+                          placeholder="ex: 1.2M, 500K..."
                           className="mt-1"
                         />
                       </div>

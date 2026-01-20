@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Play } from "lucide-react";
+import { Play, Eye } from "lucide-react";
 
 interface VideoCardProps {
   id: string;
@@ -10,6 +10,7 @@ interface VideoCardProps {
   youtubeUrl?: string;
   tiktokUrl?: string;
   thumbnailUrl?: string;
+  viewsCount?: string;
   onClick: () => void;
 }
 
@@ -28,6 +29,7 @@ const VideoCard = ({
   youtubeUrl,
   tiktokUrl,
   thumbnailUrl,
+  viewsCount,
   onClick,
 }: VideoCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -129,12 +131,18 @@ const VideoCard = ({
         </div>
       </div>
 
-      {/* Title */}
-      {title && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      {/* Title and Views */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {title && (
           <p className="text-sm font-medium text-foreground truncate">{title}</p>
-        </div>
-      )}
+        )}
+        {viewsCount && (
+          <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+            <Eye className="w-3 h-3" />
+            <span className="text-xs">{viewsCount} vues</span>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
