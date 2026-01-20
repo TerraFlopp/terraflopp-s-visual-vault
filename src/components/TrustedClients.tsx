@@ -27,7 +27,7 @@ const TrustedClients = () => {
   const duplicatedClients = [...clients, ...clients];
 
   return (
-    <section className="py-16 overflow-hidden">
+    <section className="py-16">
       <div className="max-w-6xl mx-auto px-4 mb-12">
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-3">
@@ -38,47 +38,49 @@ const TrustedClients = () => {
         </div>
       </div>
 
-      {/* Infinite Marquee container */}
-      <div className="relative overflow-hidden">
+      {/* Infinite Marquee container - overflow-x-clip to allow vertical overflow for hover effects */}
+      <div className="relative overflow-x-clip overflow-y-visible py-4">
         {/* Gradient overlays for smooth edges */}
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
         
-        <div className="flex animate-infinite-marquee hover:[animation-play-state:paused]">
-          {/* First set of clients */}
-          {clients.map((client, index) => (
-            <div key={`first-${client.id}-${index}`} className="flex-shrink-0 px-4">
-              {client.website_url ? (
-                <a
-                  href={client.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+        <div className="marquee-track">
+          <div className="marquee-content">
+            {clients.map((client, index) => (
+              <div key={`first-${client.id}-${index}`} className="flex-shrink-0 px-4">
+                {client.website_url ? (
+                  <a
+                    href={client.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <ClientCard client={client} />
+                  </a>
+                ) : (
                   <ClientCard client={client} />
-                </a>
-              ) : (
-                <ClientCard client={client} />
-              )}
-            </div>
-          ))}
-          {/* Duplicate set for seamless loop */}
-          {clients.map((client, index) => (
-            <div key={`second-${client.id}-${index}`} className="flex-shrink-0 px-4">
-              {client.website_url ? (
-                <a
-                  href={client.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="marquee-content" aria-hidden="true">
+            {clients.map((client, index) => (
+              <div key={`second-${client.id}-${index}`} className="flex-shrink-0 px-4">
+                {client.website_url ? (
+                  <a
+                    href={client.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <ClientCard client={client} />
+                  </a>
+                ) : (
                   <ClientCard client={client} />
-                </a>
-              ) : (
-                <ClientCard client={client} />
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -87,7 +89,7 @@ const TrustedClients = () => {
 
 const ClientCard = ({ client }: { client: TrustedClient }) => {
   return (
-    <div className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-card/80 border border-border/50 hover:border-primary/50 hover:bg-card transition-all duration-300 hover:scale-105 min-w-[220px]">
+    <div className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-card/80 border border-border/50 hover:border-primary/50 hover:bg-card transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)] min-w-[220px]">
       {client.logo_url ? (
         <img
           src={client.logo_url}

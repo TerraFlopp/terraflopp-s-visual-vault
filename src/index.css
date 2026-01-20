@@ -127,16 +127,27 @@
 }
 
 /* Infinite Marquee animation for trusted clients - smooth and seamless */
-@keyframes infinite-marquee {
+@keyframes marquee-scroll {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(-100%);
   }
 }
 
-.animate-infinite-marquee {
-  animation: infinite-marquee 25s linear infinite;
+.marquee-track {
+  display: flex;
+  width: max-content;
+}
+
+.marquee-track:hover .marquee-content {
+  animation-play-state: paused;
+}
+
+.marquee-content {
+  display: flex;
+  flex-shrink: 0;
+  animation: marquee-scroll 30s linear infinite;
   will-change: transform;
 }
