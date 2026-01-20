@@ -74,6 +74,7 @@ export type Database = {
           display_order: number
           id: string
           thumbnail_url: string | null
+          tiktok_url: string | null
           title: string | null
           updated_at: string
           video_type: string
@@ -85,6 +86,7 @@ export type Database = {
           display_order?: number
           id?: string
           thumbnail_url?: string | null
+          tiktok_url?: string | null
           title?: string | null
           updated_at?: string
           video_type: string
@@ -96,6 +98,7 @@ export type Database = {
           display_order?: number
           id?: string
           thumbnail_url?: string | null
+          tiktok_url?: string | null
           title?: string | null
           updated_at?: string
           video_type?: string
