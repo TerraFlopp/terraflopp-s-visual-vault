@@ -11,6 +11,7 @@ interface Video {
   youtube_url: string | null;
   tiktok_url: string | null;
   thumbnail_url: string | null;
+  views_count: string | null;
   display_order: number;
 }
 
@@ -89,6 +90,7 @@ const VideoGrid = ({ videos, isLoading }: VideoGridProps) => {
                 youtubeUrl={video.youtube_url || undefined}
                 tiktokUrl={video.tiktok_url || undefined}
                 thumbnailUrl={video.thumbnail_url || undefined}
+                viewsCount={video.views_count || undefined}
                 onClick={() => setSelectedVideo(video)}
               />
             </motion.div>
