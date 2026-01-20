@@ -59,7 +59,23 @@ const VideoCard = ({
     >
       {videoType === "upload" && videoUrl ? (
         <>
-          {/* Thumbnail shown when not hovered */}
+          {/* First frame preview when not hovered - using video with poster or first frame */}
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: isHovered ? 1 : 1 }}
+            onLoadedMetadata={(e) => {
+              // Seek to first frame for preview
+              const video = e.currentTarget;
+              video.currentTime = 0.1;
+            }}
+          />
+          {/* Thumbnail overlay when not hovered (if available) */}
           {!isHovered && thumbnail && (
             <img
               src={thumbnail}
@@ -67,17 +83,6 @@ const VideoCard = ({
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          {/* Video plays on hover */}
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            muted
-            loop
-            playsInline
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          />
         </>
       ) : (
         /* YouTube thumbnail */

@@ -53,6 +53,7 @@ const Admin = () => {
   const [clientName, setClientName] = useState("");
   const [clientLogoUrl, setClientLogoUrl] = useState("");
   const [clientWebsiteUrl, setClientWebsiteUrl] = useState("");
+  const [clientSubscriberCount, setClientSubscriberCount] = useState("");
   const [editingClient, setEditingClient] = useState<TrustedClient | null>(null);
 
   useEffect(() => {
@@ -254,6 +255,7 @@ const Admin = () => {
             name: clientName,
             logo_url: clientLogoUrl || null,
             website_url: clientWebsiteUrl || null,
+            subscriber_count: clientSubscriberCount || null,
           })
           .eq("id", editingClient.id);
 
@@ -268,6 +270,7 @@ const Admin = () => {
           name: clientName,
           logo_url: clientLogoUrl || null,
           website_url: clientWebsiteUrl || null,
+          subscriber_count: clientSubscriberCount || null,
           display_order: maxOrder + 1,
         });
 
@@ -307,6 +310,7 @@ const Admin = () => {
     setClientName(client.name);
     setClientLogoUrl(client.logo_url || "");
     setClientWebsiteUrl(client.website_url || "");
+    setClientSubscriberCount(client.subscriber_count || "");
     setIsAddClientDialogOpen(true);
   };
 
@@ -314,6 +318,7 @@ const Admin = () => {
     setClientName("");
     setClientLogoUrl("");
     setClientWebsiteUrl("");
+    setClientSubscriberCount("");
     setEditingClient(null);
   };
 
@@ -641,6 +646,16 @@ const Admin = () => {
                         value={clientWebsiteUrl}
                         onChange={(e) => setClientWebsiteUrl(e.target.value)}
                         placeholder="https://..."
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client-subscribers">Nombre d'abonnés (optionnel)</Label>
+                      <Input
+                        id="client-subscribers"
+                        value={clientSubscriberCount}
+                        onChange={(e) => setClientSubscriberCount(e.target.value)}
+                        placeholder="ex: 150K, 2.5M..."
                         className="mt-1"
                       />
                     </div>
