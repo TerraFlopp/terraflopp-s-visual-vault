@@ -38,17 +38,39 @@ const TrustedClients = () => {
         </div>
       </div>
 
-      {/* Marquee container */}
-      <div className="relative">
-        <div className="flex animate-marquee">
-          {duplicatedClients.map((client, index) => (
-            <div key={`${client.id}-${index}`} className="flex-shrink-0 px-4">
+      {/* Infinite Marquee container */}
+      <div className="relative overflow-hidden">
+        {/* Gradient overlays for smooth edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        
+        <div className="flex animate-infinite-marquee hover:[animation-play-state:paused]">
+          {/* First set of clients */}
+          {clients.map((client, index) => (
+            <div key={`first-${client.id}-${index}`} className="flex-shrink-0 px-4">
               {client.website_url ? (
                 <a
                   href={client.website_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block group"
+                  className="block"
+                >
+                  <ClientCard client={client} />
+                </a>
+              ) : (
+                <ClientCard client={client} />
+              )}
+            </div>
+          ))}
+          {/* Duplicate set for seamless loop */}
+          {clients.map((client, index) => (
+            <div key={`second-${client.id}-${index}`} className="flex-shrink-0 px-4">
+              {client.website_url ? (
+                <a
+                  href={client.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
                 >
                   <ClientCard client={client} />
                 </a>
