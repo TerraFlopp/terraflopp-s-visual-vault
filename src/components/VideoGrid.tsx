@@ -9,6 +9,7 @@ interface Video {
   video_type: string;
   video_url: string | null;
   youtube_url: string | null;
+  tiktok_url: string | null;
   thumbnail_url: string | null;
   display_order: number;
 }
@@ -83,9 +84,10 @@ const VideoGrid = ({ videos, isLoading }: VideoGridProps) => {
               <VideoCard
                 id={video.id}
                 title={video.title || undefined}
-                videoType={video.video_type as "upload" | "youtube"}
+                videoType={video.video_type as "upload" | "youtube" | "tiktok"}
                 videoUrl={video.video_url || undefined}
                 youtubeUrl={video.youtube_url || undefined}
+                tiktokUrl={video.tiktok_url || undefined}
                 thumbnailUrl={video.thumbnail_url || undefined}
                 onClick={() => setSelectedVideo(video)}
               />

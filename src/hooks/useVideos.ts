@@ -7,6 +7,7 @@ export interface Video {
   video_type: string;
   video_url: string | null;
   youtube_url: string | null;
+  tiktok_url: string | null;
   thumbnail_url: string | null;
   display_order: number;
   created_at: string;

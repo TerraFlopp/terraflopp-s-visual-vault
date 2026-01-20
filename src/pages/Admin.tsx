@@ -43,7 +43,9 @@ const Admin = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [addingYoutube, setAddingYoutube] = useState(false);
+  const [addingTiktok, setAddingTiktok] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [draggedVideo, setDraggedVideo] = useState<Video | null>(null);
   
@@ -170,6 +172,46 @@ const Admin = () => {
       toast.error(error.message || "Erreur lors de l'ajout");
     } finally {
       setAddingYoutube(false);
+    }
+  };
+
+  const handleAddTiktok = async () => {
+    if (!tiktokUrl) {
+      toast.error("Veuillez entrer une URL TikTok");
+      return;
+    }
+
+    const tiktokRegex = /tiktok\.com\/@[^\/]+\/video\/(\d+)|tiktok\.com\/t\/([a-zA-Z0-9]+)|vm\.tiktok\.com\/([a-zA-Z0-9]+)/;
+    if (!tiktokRegex.test(tiktokUrl)) {
+      toast.error("URL TikTok invalide");
+      return;
+    }
+
+    setAddingTiktok(true);
+
+    try {
+      const maxOrder = videos.length > 0
+        ? Math.max(...videos.map((v) => v.display_order))
+        : 0;
+
+      const { error } = await supabase.from("videos").insert({
+        title: videoTitle || "Vidéo TikTok",
+        video_type: "tiktok",
+        tiktok_url: tiktokUrl,
+        display_order: maxOrder + 1,
+      });
+
+      if (error) throw error;
+
+      toast.success("Vidéo TikTok ajoutée !");
+      queryClient.invalidateQueries({ queryKey: ["videos"] });
+      setIsAddDialogOpen(false);
+      setTiktokUrl("");
+      setVideoTitle("");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'ajout");
+    } finally {
+      setAddingTiktok(false);
     }
   };
 
@@ -394,7 +436,7 @@ const Admin = () => {
                     <DialogTitle>Ajouter une vidéo</DialogTitle>
                   </DialogHeader>
                   <Tabs defaultValue="upload" className="mt-4">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="upload">
                         <Upload className="w-4 h-4 mr-2" />
                         Upload
@@ -402,6 +444,10 @@ const Admin = () => {
                       <TabsTrigger value="youtube">
                         <Youtube className="w-4 h-4 mr-2" />
                         YouTube
+                      </TabsTrigger>
+                      <TabsTrigger value="tiktok">
+                        <VideoIcon className="w-4 h-4 mr-2" />
+                        TikTok
                       </TabsTrigger>
                     </TabsList>
 
@@ -479,6 +525,40 @@ const Admin = () => {
                         )}
                       </Button>
                     </TabsContent>
+
+                    <TabsContent value="tiktok" className="space-y-4 mt-4">
+                      <div>
+                        <Label htmlFor="tiktok-title">Titre (optionnel)</Label>
+                        <Input
+                          id="tiktok-title"
+                          value={videoTitle}
+                          onChange={(e) => setVideoTitle(e.target.value)}
+                          placeholder="Nom de la vidéo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="tiktok-url">URL TikTok</Label>
+                        <Input
+                          id="tiktok-url"
+                          value={tiktokUrl}
+                          onChange={(e) => setTiktokUrl(e.target.value)}
+                          placeholder="https://www.tiktok.com/@user/video/..."
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleAddTiktok}
+                        className="w-full"
+                        disabled={addingTiktok}
+                      >
+                        {addingTiktok ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Ajouter"
+                        )}
+                      </Button>
+                    </TabsContent>
                   </Tabs>
                 </DialogContent>
               </Dialog>
@@ -537,6 +617,15 @@ const Admin = () => {
                           alt={video.title || "Video"}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
+                      ) : video.video_type === "tiktok" ? (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#ff0050] via-[#00f2ea] to-[#000] flex items-center justify-center">
+                          <div className="text-center">
+                            <svg className="w-12 h-12 mx-auto mb-2" viewBox="0 0 48 48" fill="white">
+                              <path d="M38.4 10.1c-2.5-1.6-4.3-4.2-4.8-7.3-.1-.5-.1-1-.1-1.5h-7.7v26.9c0 3.2-2.4 5.9-5.5 6.2-3.5.4-6.5-2.3-6.5-5.7 0-3.2 2.6-5.8 5.8-5.8.6 0 1.2.1 1.8.3v-7.9c-.6-.1-1.2-.1-1.8-.1-7.5 0-13.6 6.1-13.6 13.6 0 7.5 6.1 13.6 13.6 13.6 7.5 0 13.6-6.1 13.6-13.6V15.4c2.9 2.1 6.5 3.3 10.3 3.3v-7.7c-2-.1-3.9-.5-5.6-1.4-.2.2-.3.3-.5.5z"/>
+                            </svg>
+                            <span className="text-white text-xs font-semibold">TikTok</span>
+                          </div>
+                        </div>
                       ) : video.thumbnail_url ? (
                         <img
                           src={video.thumbnail_url}
@@ -578,7 +667,7 @@ const Admin = () => {
                           {video.title || "Sans titre"}
                         </p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {video.video_type === "youtube" ? "YouTube" : "Upload"}
+                          {video.video_type === "youtube" ? "YouTube" : video.video_type === "tiktok" ? "TikTok" : "Upload"}
                         </p>
                       </div>
                     </motion.div>

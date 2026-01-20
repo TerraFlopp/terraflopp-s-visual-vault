@@ -7,6 +7,7 @@ interface Video {
   video_type: string;
   video_url: string | null;
   youtube_url: string | null;
+  tiktok_url: string | null;
   thumbnail_url: string | null;
 }
 
@@ -24,8 +25,55 @@ const getYouTubeEmbedUrl = (url: string): string => {
   return url;
 };
 
+const getTikTokVideoId = (url: string): string | null => {
+  // Match various TikTok URL formats
+  const match = url.match(/tiktok\.com\/@[^\/]+\/video\/(\d+)|tiktok\.com\/t\/([a-zA-Z0-9]+)|vm\.tiktok\.com\/([a-zA-Z0-9]+)/);
+  if (match) {
+    return match[1] || match[2] || match[3];
+  }
+  return null;
+};
+
 const VideoModal = ({ video, isOpen, onClose }: VideoModalProps) => {
   if (!video) return null;
+
+  const renderContent = () => {
+    if (video.video_type === "upload" && video.video_url) {
+      return (
+        <video
+          src={video.video_url}
+          controls
+          autoPlay
+          className="w-full h-full object-contain"
+        />
+      );
+    }
+
+    if (video.video_type === "youtube" && video.youtube_url) {
+      return (
+        <iframe
+          src={getYouTubeEmbedUrl(video.youtube_url)}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
+    if (video.video_type === "tiktok" && video.tiktok_url) {
+      const videoId = getTikTokVideoId(video.tiktok_url);
+      return (
+        <iframe
+          src={`https://www.tiktok.com/embed/v2/${videoId}`}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
+    return null;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -38,21 +86,7 @@ const VideoModal = ({ video, isOpen, onClose }: VideoModalProps) => {
         </button>
 
         <div className="aspect-[9/16] max-h-[85vh] w-full bg-black">
-          {video.video_type === "upload" && video.video_url ? (
-            <video
-              src={video.video_url}
-              controls
-              autoPlay
-              className="w-full h-full object-contain"
-            />
-          ) : video.youtube_url ? (
-            <iframe
-              src={getYouTubeEmbedUrl(video.youtube_url)}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : null}
+          {renderContent()}
         </div>
 
         {video.title && (

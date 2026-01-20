@@ -5,9 +5,10 @@ import { Play } from "lucide-react";
 interface VideoCardProps {
   id: string;
   title?: string;
-  videoType: "upload" | "youtube";
+  videoType: "upload" | "youtube" | "tiktok";
   videoUrl?: string;
   youtubeUrl?: string;
+  tiktokUrl?: string;
   thumbnailUrl?: string;
   onClick: () => void;
 }
@@ -25,6 +26,7 @@ const VideoCard = ({
   videoType,
   videoUrl,
   youtubeUrl,
+  tiktokUrl,
   thumbnailUrl,
   onClick,
 }: VideoCardProps) => {
@@ -46,7 +48,14 @@ const VideoCard = ({
     }
   };
 
-  const thumbnail = thumbnailUrl || (youtubeUrl ? getYouTubeThumbnail(youtubeUrl) : undefined);
+  const getThumbnail = () => {
+    if (thumbnailUrl) return thumbnailUrl;
+    if (youtubeUrl) return getYouTubeThumbnail(youtubeUrl);
+    // TikTok doesn't provide easy thumbnail access, use a placeholder
+    return undefined;
+  };
+
+  const thumbnail = getThumbnail();
 
   return (
     <motion.div
@@ -68,7 +77,6 @@ const VideoCard = ({
             playsInline
             preload="metadata"
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ opacity: isHovered ? 1 : 1 }}
             onLoadedMetadata={(e) => {
               // Seek to first frame for preview
               const video = e.currentTarget;
@@ -84,6 +92,24 @@ const VideoCard = ({
             />
           )}
         </>
+      ) : videoType === "tiktok" ? (
+        /* TikTok placeholder with logo */
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#ff0050] via-[#00f2ea] to-[#000] flex items-center justify-center">
+          {thumbnail ? (
+            <img
+              src={thumbnail}
+              alt={title || "TikTok video"}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-center">
+              <svg className="w-16 h-16 mx-auto mb-2" viewBox="0 0 48 48" fill="white">
+                <path d="M38.4 10.1c-2.5-1.6-4.3-4.2-4.8-7.3-.1-.5-.1-1-.1-1.5h-7.7v26.9c0 3.2-2.4 5.9-5.5 6.2-3.5.4-6.5-2.3-6.5-5.7 0-3.2 2.6-5.8 5.8-5.8.6 0 1.2.1 1.8.3v-7.9c-.6-.1-1.2-.1-1.8-.1-7.5 0-13.6 6.1-13.6 13.6 0 7.5 6.1 13.6 13.6 13.6 7.5 0 13.6-6.1 13.6-13.6V15.4c2.9 2.1 6.5 3.3 10.3 3.3v-7.7c-2-.1-3.9-.5-5.6-1.4-.2.2-.3.3-.5.5z"/>
+              </svg>
+              <span className="text-white font-semibold">TikTok</span>
+            </div>
+          )}
+        </div>
       ) : (
         /* YouTube thumbnail */
         <img
