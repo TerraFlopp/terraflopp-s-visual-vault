@@ -118,7 +118,7 @@ const Hero = () => {
             <div className="flex items-center gap-3 bg-muted rounded-xl px-6 py-4 w-full max-w-xs">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">Discord</p>
-                <p className="text-lg font-mono font-semibold text-primary">
+                <p className="text-lg font-mono font-semibold text-primary" href="https://discord.com/users/289389566211784706">
                   terraflopp
                 </p>
               </div>
